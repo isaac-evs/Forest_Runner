@@ -14,38 +14,51 @@ clock = pygame.time.Clock()
 font = pygame.font.Font("font/pixeltype.ttf", 50)
 
 # Create a surface
-sky_surface = pygame.image.load("graphics/sky.png").convert_alpha() # convert into a more efficient file format
+sky1_surface = pygame.image.load("graphics/sky1.png").convert_alpha() # convert into a more efficient file format
+sky2_surface = pygame.image.load("graphics/sky2.png").convert_alpha()
 ground_surface = pygame.image.load("graphics/ground.png").convert_alpha()
-text_surface = font.render("My game", False, "Black")
+score_surface = font.render("Score", False, "White")
+score_rectangle = score_surface.get_rect(center = (400, 50) )
 
 # Characters
-pig_surface = pygame.image.load("graphics/pig/pig1.png").convert_alpha()
-pig_x_position = 800
+npc1_surface = pygame.image.load("graphics/mushroom/mushroom1.png").convert_alpha()
+npc1_rectangle = npc1_surface.get_rect(midbottom = (800, 290))
 
 player_surface = pygame.image.load("graphics/player/player-run-1.png").convert_alpha()
-# creating rectangle
-player_rectangle = player_surface.get_rect(midbottom = (80, 275))
+player_rectangle = player_surface.get_rect(midbottom = (80, 290))
+
 
 # Game loop
 while True:
-    #get every event anc check user input
+    # get every event anc check user input
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+        # if mouse collides with player rectangle print collision
+        if event.type == pygame.MOUSEMOTION:
+            if player_rectangle.collidepoint(event.pos): print("collision")
 
-    #display surface on screen
-    screen.blit(sky_surface,(0,0)) # 1
-    screen.blit(ground_surface,(0, 20)) # 2 ...
-    screen.blit(text_surface,(300, 20))
+    # display surface on screen
+    screen.blit(sky1_surface,(0,0)) # 1
+    screen.blit(sky2_surface,(0,-40)) # 2
+    screen.blit(ground_surface,(0, 0)) # 3 ...
+    # draw an rectangle
+    pygame.draw.rect(screen, "cadetblue2", score_rectangle)
+    screen.blit(score_surface,score_rectangle)
 
     # display pig in a loop
-    pig_x_position -= 4
-    if pig_x_position == -120: pig_x_position = 800
-    screen.blit(pig_surface,(pig_x_position, 190))
+    npc1_rectangle.x -= 4
+    if npc1_rectangle.right <= 0: npc1_rectangle.left = 800
+    screen.blit(npc1_surface, npc1_rectangle )
 
     # player
-    screen.blit(player_surface,(player_rectangle))
+    screen.blit(player_surface,player_rectangle)
+    # Check collition
+
+    #if player_rectangle.colliderect(npc1_rectangle):
+    #    print("collision")
+
 
     #update screen surface
     pygame.display.update()
