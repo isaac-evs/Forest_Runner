@@ -31,6 +31,23 @@ def collisions(player, obstacles):
             if player.colliderect(obstacle_rect): return False
     return True
 
+# player animation
+def player_animation():
+    global player_surface, player_run_index, player_jump_index, jump_frame_count
+
+    if player_rectangle.bottom < 290:
+        jump_frame_count += 1
+        if jump_frame_count % 60 < 20:
+            player_surface = player_jump[0]
+        else:
+            player_surface = player_jump[1]
+
+    else:
+        player_run_index += 0.2
+        if player_run_index >= len(player_run): player_run_index = 0
+        player_surface = player_run[int(player_run_index)]
+        jump_frame_count = 0
+
 #Initialize pygame library
 pygame.init()
 
@@ -55,7 +72,6 @@ ground_surface = pygame.image.load("graphics/ground.png").convert_alpha()
 
 # Obstacles
 npc1_surface = pygame.image.load("graphics/mushroom/mushroom1.png").convert_alpha()
-
 npc2_surface = pygame.image.load("graphics/eagle/eagle-attack-1.png").convert_alpha()
 
 
@@ -63,8 +79,28 @@ obstacle_rectangle_list = []
 
 
 # Player
-player_surface = pygame.image.load("graphics/player/player-run-1.png").convert_alpha()
-player_rectangle = player_surface.get_rect(midbottom = (80, 290))
+player_run_1 = pygame.image.load("graphics/player/player-run-1.png").convert_alpha()
+player_run_2 = pygame.image.load("graphics/player/player-run-2.png").convert_alpha()
+player_run_3 = pygame.image.load("graphics/player/player-run-3.png").convert_alpha()
+player_run_4 = pygame.image.load("graphics/player/player-run-4.png").convert_alpha()
+player_run_5 = pygame.image.load("graphics/player/player-run-5.png").convert_alpha()
+player_run_6 = pygame.image.load("graphics/player/player-run-6.png").convert_alpha()
+
+player_run = [player_run_1, player_run_2, player_run_3, player_run_4, player_run_5, player_run_6]
+player_run_index = 0
+
+player_jump_1 = pygame.image.load("graphics/player/player-jump-1.png").convert_alpha()
+player_jump_2 = pygame.image.load("graphics/player/player-jump-2.png").convert_alpha()
+
+player_jump = [player_jump_1, player_jump_2]
+player_jump_index = 0
+jump_frame_count = 0
+
+
+player_surface = player_run[player_run_index]
+
+
+player_rectangle = player_surface.get_rect(midbottom = (150, 290))
 player_collision_rectangle = player_rectangle.inflate(-40, -30)
 
 
@@ -135,6 +171,7 @@ while True:
         player_gravity += 1
         player_rectangle.bottom += player_gravity
         if player_rectangle.bottom >= 290: player_rectangle.bottom = 290
+        player_animation()
         screen.blit(player_surface,player_rectangle)
 
 
