@@ -1,5 +1,6 @@
 import pygame
 from sys import exit
+from random import randint
 
 # Score function
 def display_score():
@@ -8,6 +9,27 @@ def display_score():
     score_rectangle = score_surface.get_rect(center = (400, 50))
     screen.blit(score_surface, score_rectangle)
     return time
+
+# Obstacle movement function
+def obstacle_movement(obstacle_list):
+    if obstacle_list:
+        for obstacle_rect in obstacle_list:
+            obstacle_rect.x -= 5
+
+            if obstacle_rect.bottom == 290: screen.blit(npc1_surface, obstacle_rect)
+            else: screen.blit(npc2_surface, obstacle_rect)
+
+        obstacle_list = [obstacle for obstacle in obstacle_list if obstacle.x > -100]
+
+        return obstacle_list
+    else: return []
+
+# obstacle collsions
+def collisions(player, obstacles):
+    if obstacles:
+        for obstacle_rect in obstacles:
+            if player.colliderect(obstacle_rect): return False
+    return True
 
 #Initialize pygame library
 pygame.init()
@@ -31,16 +53,20 @@ sky1_surface = pygame.image.load("graphics/sky1.png").convert_alpha() # convert 
 sky2_surface = pygame.image.load("graphics/sky2.png").convert_alpha()
 ground_surface = pygame.image.load("graphics/ground.png").convert_alpha()
 
-# Characters
+# Obstacles
 npc1_surface = pygame.image.load("graphics/mushroom/mushroom1.png").convert_alpha()
-npc1_rectangle = npc1_surface.get_rect(midbottom = (800, 290))
-npc1_collision_rectangle = npc1_rectangle.inflate(-40, -30)
+
+npc2_surface = pygame.image.load("graphics/eagle/eagle-attack-1.png").convert_alpha()
+
+
+obstacle_rectangle_list = []
 
 
 # Player
 player_surface = pygame.image.load("graphics/player/player-run-1.png").convert_alpha()
 player_rectangle = player_surface.get_rect(midbottom = (80, 290))
 player_collision_rectangle = player_rectangle.inflate(-40, -30)
+
 
 player_gravity = 0
 
@@ -57,6 +83,8 @@ game_message_rectangle = game_message.get_rect(center = (400,340))
 
 # Costum user event
 obstacle_timer = pygame.USEREVENT + 1
+# timer
+pygame.time.set_timer(obstacle_timer,1500)
 
 # Game loop
 while True:
@@ -76,11 +104,15 @@ while True:
                 if event.key == pygame.K_SPACE and player_rectangle.bottom >= 290:
                     player_gravity = -20
 
+            if event.type == obstacle_timer:
+                if randint(0,2):
+                    obstacle_rectangle_list.append(npc1_surface.get_rect(midbottom = (randint(900,1100), 290)))
+                else:
+                    obstacle_rectangle_list.append(npc2_surface.get_rect(midbottom = (randint(900,1100), randint(150, 190))))
         else:
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 game_active = True
-                npc1_rectangle.left = 800
                 start_time = pygame.time.get_ticks()
 
 
@@ -93,23 +125,24 @@ while True:
         score = display_score()
 
         # display npc in a loop
-        npc1_rectangle.x -= 5
-        if npc1_rectangle.right <= 0: npc1_rectangle.left = 800
-        screen.blit(npc1_surface, npc1_rectangle)
-        npc1_collision_rectangle.center = npc1_rectangle.center
-        pygame.draw.rect(screen, (255, 0, 0), npc1_collision_rectangle, 2)
+        #npc1_rectangle.x -= 5
+        #if npc1_rectangle.right <= 0: npc1_rectangle.left = 800
+        #screen.blit(npc1_surface, npc1_rectangle)
+        #npc1_collision_rectangle.center = npc1_rectangle.center
+        #pygame.draw.rect(screen, (255, 0, 0), npc1_collision_rectangle, 2)
 
         # player
         player_gravity += 1
         player_rectangle.bottom += player_gravity
         if player_rectangle.bottom >= 290: player_rectangle.bottom = 290
         screen.blit(player_surface,player_rectangle)
-        player_collision_rectangle.center = player_rectangle.center
-        pygame.draw.rect(screen, (0, 255, 0), player_collision_rectangle, 2)
+
+
+        #obstacle movement
+        obstacle_rectangle_list = obstacle_movement(obstacle_rectangle_list)
 
         # enemy collision
-        if npc1_collision_rectangle.colliderect(player_collision_rectangle):
-            game_active = False
+        game_active = collisions(player_rectangle, obstacle_rectangle_list)
 
     else:
         screen.fill("#88b07b")
@@ -117,6 +150,10 @@ while True:
         screen.blit(game_title_surface, game_title_rectangle)
         score_message = font.render(f"Your score: {score}", False, "White")
         score_message_rectangle = score_message.get_rect(center = (400, 340))
+
+        obstacle_rectangle_list.clear()
+        player_rectangle.midbottom = (80, 290)
+        player_gravity = 0
 
         if score == 0:
             screen.blit(game_message, game_message_rectangle)
