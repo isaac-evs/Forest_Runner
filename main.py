@@ -2,6 +2,13 @@ import pygame
 from sys import exit
 from random import randint
 
+class Player(pygame.sprite.Sprite):
+
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("graphics/player/player-run-1.png").convert_alpha()
+        self.rect = self.image.get_rect(midbottom =(200, 290))
+
 # Score function
 def display_score():
     time = int(pygame.time.get_ticks() / 1000) - int(start_time / 1000)
@@ -16,7 +23,7 @@ def obstacle_movement(obstacle_list):
         for obstacle_rect in obstacle_list:
             obstacle_rect.x -= 5
 
-            if obstacle_rect.bottom == 290: screen.blit(npc1_surface, obstacle_rect)
+            if obstacle_rect.bottom == 293: screen.blit(npc1_surface, obstacle_rect)
             else: screen.blit(npc2_surface, obstacle_rect)
 
         obstacle_list = [obstacle for obstacle in obstacle_list if obstacle.x > -100]
@@ -65,18 +72,44 @@ game_active = False
 start_time = 0
 score = 0
 
+
+player = pygame.sprite.GroupSingle()
+player.add(Player())
+
+
 # Create a surface
 sky1_surface = pygame.image.load("graphics/sky1.png").convert_alpha() # convert into a more efficient file format
 sky2_surface = pygame.image.load("graphics/sky2.png").convert_alpha()
 ground_surface = pygame.image.load("graphics/ground.png").convert_alpha()
 
-# Obstacles
-npc1_surface = pygame.image.load("graphics/mushroom/mushroom1.png").convert_alpha()
-npc2_surface = pygame.image.load("graphics/eagle/eagle-attack-1.png").convert_alpha()
+# Mushroom
+npc1_frame1 = pygame.image.load("graphics/mushroom/mushroom1.png").convert_alpha()
+npc1_frame2 = pygame.image.load("graphics/mushroom/mushroom2.png").convert_alpha()
+npc1_frame3 = pygame.image.load("graphics/mushroom/mushroom3.png").convert_alpha()
+npc1_frame4 = pygame.image.load("graphics/mushroom/mushroom4.png").convert_alpha()
+npc1_frame5 = pygame.image.load("graphics/mushroom/mushroom5.png").convert_alpha()
+npc1_frame6 = pygame.image.load("graphics/mushroom/mushroom6.png").convert_alpha()
+npc1_frame7 = pygame.image.load("graphics/mushroom/mushroom7.png").convert_alpha()
+npc1_frame8 = pygame.image.load("graphics/mushroom/mushroom8.png").convert_alpha()
+npc1_frame9 = pygame.image.load("graphics/mushroom/mushroom9.png").convert_alpha()
 
+npc1_frames = [npc1_frame1, npc1_frame2, npc1_frame3, npc1_frame4, npc1_frame5, npc1_frame6, npc1_frame7, npc1_frame8, npc1_frame9]
+npc1_frame_index = 0
+
+npc1_surface = npc1_frames[npc1_frame_index]
+
+# Eagle
+npc2_frame1 = pygame.image.load("graphics/eagle/eagle-attack-1.png").convert_alpha()
+npc2_frame2 = pygame.image.load("graphics/eagle/eagle-attack-2.png").convert_alpha()
+npc2_frame3 = pygame.image.load("graphics/eagle/eagle-attack-3.png").convert_alpha()
+npc2_frame4 = pygame.image.load("graphics/eagle/eagle-attack-4.png").convert_alpha()
+
+npc2_frames = [npc2_frame1, npc2_frame2, npc2_frame3, npc2_frame4]
+npc2_frame_index = 0
+
+npc2_surface = npc2_frames[npc2_frame_index]
 
 obstacle_rectangle_list = []
-
 
 # Player
 player_run_1 = pygame.image.load("graphics/player/player-run-1.png").convert_alpha()
@@ -98,12 +131,7 @@ jump_frame_count = 0
 
 
 player_surface = player_run[player_run_index]
-
-
 player_rectangle = player_surface.get_rect(midbottom = (150, 290))
-player_collision_rectangle = player_rectangle.inflate(-40, -30)
-
-
 player_gravity = 0
 
 # Intro screen
@@ -117,10 +145,17 @@ game_title_rectangle = game_title_surface.get_rect(center = (400,60))
 game_message = font.render("Press space to run", False, "White")
 game_message_rectangle = game_message.get_rect(center = (400,340))
 
-# Costum user event
+# obstacle timer
 obstacle_timer = pygame.USEREVENT + 1
-# timer
 pygame.time.set_timer(obstacle_timer,1500)
+
+# mushroom timer
+npc1_animation_timer = pygame.USEREVENT + 2
+pygame.time.set_timer(npc1_animation_timer, 100)
+
+# eagle timer
+npc2_animation_timer = pygame.USEREVENT + 3
+pygame.time.set_timer(npc2_animation_timer, 100)
 
 # Game loop
 while True:
@@ -142,9 +177,21 @@ while True:
 
             if event.type == obstacle_timer:
                 if randint(0,2):
-                    obstacle_rectangle_list.append(npc1_surface.get_rect(midbottom = (randint(900,1100), 290)))
+                    obstacle_rectangle_list.append(npc1_surface.get_rect(midbottom = (randint(900,1100), 293)))
                 else:
                     obstacle_rectangle_list.append(npc2_surface.get_rect(midbottom = (randint(900,1100), randint(150, 190))))
+
+            if event.type == npc1_animation_timer:
+                npc1_frame_index += 1
+                if npc1_frame_index >= len(npc1_frames): npc1_frame_index = 0
+                npc1_surface = npc1_frames[int(npc1_frame_index)]
+
+            if event.type == npc2_animation_timer:
+                npc2_frame_index += 1
+                if npc2_frame_index >= len(npc2_frames): npc2_frame_index = 0
+                npc2_surface = npc2_frames[int(npc2_frame_index)]
+
+
         else:
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
@@ -160,19 +207,13 @@ while True:
         screen.blit(ground_surface,(0, 0)) # 3 ...
         score = display_score()
 
-        # display npc in a loop
-        #npc1_rectangle.x -= 5
-        #if npc1_rectangle.right <= 0: npc1_rectangle.left = 800
-        #screen.blit(npc1_surface, npc1_rectangle)
-        #npc1_collision_rectangle.center = npc1_rectangle.center
-        #pygame.draw.rect(screen, (255, 0, 0), npc1_collision_rectangle, 2)
-
         # player
         player_gravity += 1
         player_rectangle.bottom += player_gravity
         if player_rectangle.bottom >= 290: player_rectangle.bottom = 290
         player_animation()
         screen.blit(player_surface,player_rectangle)
+        player.draw(screen)
 
 
         #obstacle movement
