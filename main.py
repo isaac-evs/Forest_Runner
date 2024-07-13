@@ -22,6 +22,7 @@ clock = pygame.time.Clock()
 font = pygame.font.Font("font/pixeltype.ttf", 50)
 # Game state
 game_active = False
+# Time and score
 start_time = 0
 score = 0
 
@@ -29,16 +30,18 @@ score = 0
 sky1_surface = pygame.image.load("graphics/sky1.png").convert_alpha() # convert into a more efficient file format
 sky2_surface = pygame.image.load("graphics/sky2.png").convert_alpha()
 ground_surface = pygame.image.load("graphics/ground.png").convert_alpha()
-#score_surface = font.render("Score", False, "gray30")
-#score_rectangle = score_surface.get_rect(center = (400, 50) )
 
 # Characters
 npc1_surface = pygame.image.load("graphics/mushroom/mushroom1.png").convert_alpha()
 npc1_rectangle = npc1_surface.get_rect(midbottom = (800, 290))
+npc1_collision_rectangle = npc1_rectangle.inflate(-40, -30)
+
 
 # Player
 player_surface = pygame.image.load("graphics/player/player-run-1.png").convert_alpha()
 player_rectangle = player_surface.get_rect(midbottom = (80, 290))
+player_collision_rectangle = player_rectangle.inflate(-40, -30)
+
 player_gravity = 0
 
 # Intro screen
@@ -51,6 +54,9 @@ game_title_rectangle = game_title_surface.get_rect(center = (400,60))
 
 game_message = font.render("Press space to run", False, "White")
 game_message_rectangle = game_message.get_rect(center = (400,340))
+
+# Costum user event
+obstacle_timer = pygame.USEREVENT + 1
 
 # Game loop
 while True:
@@ -84,27 +90,25 @@ while True:
         screen.blit(sky1_surface,(0,0)) # 1
         screen.blit(sky2_surface,(0,-40)) # 2
         screen.blit(ground_surface,(0, 0)) # 3 ...
-
-        # draw an rectangle
-        #pygame.draw.rect(screen, "palegreen3", score_rectangle)
-        #screen.blit(score_surface,score_rectangle)
         score = display_score()
 
         # display npc in a loop
         npc1_rectangle.x -= 5
         if npc1_rectangle.right <= 0: npc1_rectangle.left = 800
-        screen.blit(npc1_surface, npc1_rectangle )
+        screen.blit(npc1_surface, npc1_rectangle)
+        npc1_collision_rectangle.center = npc1_rectangle.center
+        pygame.draw.rect(screen, (255, 0, 0), npc1_collision_rectangle, 2)
 
         # player
         player_gravity += 1
         player_rectangle.bottom += player_gravity
-
-        # ground collision
         if player_rectangle.bottom >= 290: player_rectangle.bottom = 290
         screen.blit(player_surface,player_rectangle)
+        player_collision_rectangle.center = player_rectangle.center
+        pygame.draw.rect(screen, (0, 255, 0), player_collision_rectangle, 2)
 
         # enemy collision
-        if npc1_rectangle.colliderect(player_rectangle):
+        if npc1_collision_rectangle.colliderect(player_collision_rectangle):
             game_active = False
 
     else:
