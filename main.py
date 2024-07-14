@@ -38,9 +38,10 @@ class Player(pygame.sprite.Sprite):
 
     def player_input(self):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE] and self.rect.bottom >= 290:
-            self.gravity = -20
-            self.jump_sound.play()
+        if death_animation_executed == False:
+            if keys[pygame.K_SPACE] and self.rect.bottom >= 290:
+                self.gravity = -20
+                self.jump_sound.play()
 
     def apply_gravity(self):
         self.gravity += 1
@@ -126,13 +127,18 @@ def collisions():
     collide_callable = pygame.sprite.collide_rect_ratio(0.7)
 
     if pygame.sprite.spritecollide(player.sprite, obstacle_group, False, collided=collide_callable):
-        obstacle_group.empty()
         player.sprite.is_hurt = True
+        hurt_time = pygame.time.get_ticks()
         return False
     else:
         player.sprite.is_hurt = False
         return True
 
+def time_since_hurt():
+    if hurt_time == 0:
+        return 0
+    else:
+        return pygame.time.get_ticks() - hurt_time
 
 pygame.init()
 
@@ -149,6 +155,9 @@ game_active = False
 start_time = 0
 score = 0
 
+hurt_time = 0
+
+death_animation_executed = False
 
 
 bg_music = pygame.mixer.Sound("audio/music.mp3")
@@ -200,10 +209,10 @@ while True:
                 obstacle_group.add(Obstacle(choice(["eagle","mushroom", "mushroom", "mushroom"])))
 
         else:
-
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                game_active = True
-                start_time = pygame.time.get_ticks()
+            if death_animation_executed == False:
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    game_active = True
+                    start_time = pygame.time.get_ticks()
 
 
     if game_active == True:
@@ -241,16 +250,57 @@ while True:
 
     else:
 
-        screen.fill("#88b07b")
-        screen.blit(player_stand, player_stand_rectangle)
-        screen.blit(game_title_surface, game_title_rectangle)
-        score_message = font.render(f"Your score: {score}", False, "White")
-        score_message_rectangle = score_message.get_rect(center = (400, 340))
-
         if score == 0:
-            screen.blit(game_message, game_message_rectangle)
-        else:
-            screen.blit(score_message, score_message_rectangle)
+            screen.fill("#88b07b")
+            screen.blit(player_stand, player_stand_rectangle)
+            screen.blit(game_title_surface, game_title_rectangle)
+            score_message = font.render(f"Your score: {score}", False, "White")
+            score_message_rectangle = score_message.get_rect(center = (400, 340))
+
+            if score == 0:
+                screen.blit(game_message, game_message_rectangle)
+            else:
+                screen.blit(score_message, score_message_rectangle)
+
+        if player.sprite.is_hurt:
+
+            screen.blit(sky1_surface, (sky1_x_pos, 0))
+            screen.blit(sky1_surface, (sky1_x_pos + 800, 0))
+
+            screen.blit(sky2_surface, (sky2_x_pos, -40))
+            screen.blit(sky2_surface, (sky2_x_pos + 800, -40))
+
+            screen.blit(ground_surface, (ground_x_pos, 0))
+            screen.blit(ground_surface, (ground_x_pos + 800, 0))
+
+            obstacle_group.update()
+            obstacle_group.draw(screen)
+
+            player.update()
+            player.draw(screen)
+
+            if death_animation_executed == False:
+                print("Death animation")
+                player.sprite.gravity = -20
+                death_animation_executed = True
+
+            hurt_time += 1
+
+            if hurt_time >= 120:
+                hurt_time = 0
+                player.sprite.is_hurt = False
+                death_animation_executed = False
+                obstacle_group.empty()
+                screen.fill("#88b07b")
+                screen.blit(player_stand, player_stand_rectangle)
+                screen.blit(game_title_surface, game_title_rectangle)
+                score_message = font.render(f"Your score: {score}", False, "White")
+                score_message_rectangle = score_message.get_rect(center = (400, 340))
+
+                if score == 0:
+                    screen.blit(game_message, game_message_rectangle)
+                else:
+                    screen.blit(score_message, score_message_rectangle)
 
     pygame.display.update()
 
