@@ -19,14 +19,22 @@ class Player(pygame.sprite.Sprite):
         player_jump_1 = pygame.image.load("graphics/player/player-jump-1.png").convert_alpha()
         player_jump_2 = pygame.image.load("graphics/player/player-jump-2.png").convert_alpha()
         self.player_jump = [player_jump_1, player_jump_2]
-        self.jump_frame_count = 0
+        self.player_jump_index = 0
+
+        player_hurt_1 = pygame.image.load("graphics/player/player-hurt-1.png").convert_alpha()
+        player_hurt_2 = pygame.image.load("graphics/player/player-hurt-2.png").convert_alpha()
+        self.player_hurt = [player_hurt_1, player_hurt_2]
+        self.player_hurt_index = 0
+
+        self.is_hurt = False
 
         self.image = self.player_run[self.player_run_index]
         self.rect = self.image.get_rect(midbottom =(150, 290))
+
         self.gravity = 0
 
         self.jump_sound = pygame.mixer.Sound("audio/audio_jump.mp3")
-        self.jump_sound.set_volume(0.05)
+        self.jump_sound.set_volume(0.1)
 
     def player_input(self):
         keys = pygame.key.get_pressed()
@@ -41,16 +49,23 @@ class Player(pygame.sprite.Sprite):
             self.rect.bottom = 290
 
     def animation_state(self):
-        if self.rect.bottom < 290:
-            self.jump_frame_count += 1
-            if self.jump_frame_count % 60 < 20:
-                self.image = self.player_jump[0]
-            else:
-                self.image = self.player_jump[1]
+        if self.is_hurt:
+            self.player_hurt_index += 0.2
+            if self.player_hurt_index >= len(self.player_hurt):
+                self.player_hurt_index = 0
+            self.image = self.player_hurt[int(self.player_hurt_index)]
+        elif self.rect.bottom < 290:
+            self.player_jump_index += 0.05
+            if self.player_jump_index >= len(self.player_jump):
+                self.player_jump_index = 0
+            self.image = self.player_jump[int(self.player_jump_index)]
         else:
             self.player_run_index += 0.2
-            if self.player_run_index >= len(self.player_run): self.player_run_index = 0
+            if self.player_run_index >= len(self.player_run):
+                self.player_run_index = 0
             self.image = self.player_run[int(self.player_run_index)]
+            self.player_jump_index = 0
+
 
     def update(self):
         self.player_input()
@@ -91,14 +106,14 @@ class Obstacle(pygame.sprite.Sprite):
         if self.animation_index >= len(self.frames): self.animation_index = 0
         self.image = self.frames[int(self.animation_index)]
 
+    def destroy(self):
+        if self.rect.x <= -100: self.kill()
+
     def update(self):
         self.animation_state()
         self.rect.x -= 5
         self.destroy()
 
-    def destroy(self):
-        if self.rect.x <= -100:
-            self.kill()
 
 def display_score():
     time = int(pygame.time.get_ticks() / 1000) - int(start_time / 1000)
@@ -108,10 +123,15 @@ def display_score():
     return time
 
 def collisions():
-    if pygame.sprite.spritecollide(player.sprite, obstacle_group, False):
+    collide_callable = pygame.sprite.collide_rect_ratio(0.7)
+
+    if pygame.sprite.spritecollide(player.sprite, obstacle_group, False, collided=collide_callable):
         obstacle_group.empty()
+        player.sprite.is_hurt = True
         return False
-    else: return True
+    else:
+        player.sprite.is_hurt = False
+        return True
 
 
 pygame.init()
@@ -129,10 +149,11 @@ game_active = False
 start_time = 0
 score = 0
 
+
+
 bg_music = pygame.mixer.Sound("audio/music.mp3")
 bg_music.play(loops = -1)
-bg_music.set_volume(0.5)
-
+bg_music.set_volume(0.2)
 
 #Player
 player = pygame.sprite.GroupSingle()
@@ -141,11 +162,16 @@ player.add(Player())
 #Obstacles
 obstacle_group = pygame.sprite.Group()
 
-
 # Surfaces
 sky1_surface = pygame.image.load("graphics/sky1.png").convert_alpha()
 sky2_surface = pygame.image.load("graphics/sky2.png").convert_alpha()
 ground_surface = pygame.image.load("graphics/ground.png").convert_alpha()
+
+# Surface position
+sky1_x_pos = 0
+sky2_x_pos = 0
+ground_x_pos = 0
+sky_speed = 1
 
 # Intro screen
 player_stand = pygame.image.load("graphics/player/player-idle-1.png").convert_alpha()
@@ -182,21 +208,39 @@ while True:
 
     if game_active == True:
 
-        # display surface on screen
-        screen.blit(sky1_surface,(0,0)) # 1
-        screen.blit(sky2_surface,(0,-40)) # 2
-        screen.blit(ground_surface,(0, 0)) # 3 ...
+        sky1_x_pos -= sky_speed
+        sky2_x_pos -= sky_speed * 1.5
+        ground_x_pos -= sky_speed * 2.5
+
+        if sky1_x_pos <= -800:
+            sky1_x_pos = 0
+        if sky2_x_pos <= -800:
+            sky2_x_pos = 0
+        if ground_x_pos <= -800:
+            ground_x_pos = 0
+
+        # Display surfaces
+        screen.blit(sky1_surface, (sky1_x_pos, 0))
+        screen.blit(sky1_surface, (sky1_x_pos + 800, 0))
+
+        screen.blit(sky2_surface, (sky2_x_pos, -40))
+        screen.blit(sky2_surface, (sky2_x_pos + 800, -40))
+
+        screen.blit(ground_surface, (ground_x_pos, 0))
+        screen.blit(ground_surface, (ground_x_pos + 800, 0))
+
         score = display_score()
 
-        player.draw(screen)
         player.update()
+        player.draw(screen)
 
-        obstacle_group.draw(screen)
         obstacle_group.update()
+        obstacle_group.draw(screen)
 
         game_active = collisions()
 
     else:
+
         screen.fill("#88b07b")
         screen.blit(player_stand, player_stand_rectangle)
         screen.blit(game_title_surface, game_title_rectangle)
