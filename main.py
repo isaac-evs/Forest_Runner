@@ -67,7 +67,6 @@ class Player(pygame.sprite.Sprite):
             self.image = self.player_run[int(self.player_run_index)]
             self.player_jump_index = 0
 
-
     def update(self):
         self.player_input()
         self.apply_gravity()
@@ -124,7 +123,7 @@ def display_score():
     return time
 
 def collisions():
-    collide_callable = pygame.sprite.collide_rect_ratio(0.7)
+    collide_callable = pygame.sprite.collide_rect_ratio(0.5)
 
     if pygame.sprite.spritecollide(player.sprite, obstacle_group, False, collided=collide_callable):
         player.sprite.is_hurt = True
@@ -193,7 +192,9 @@ game_message_rectangle = game_message.get_rect(center = (400,340))
 
 # obstacle timer
 obstacle_timer = pygame.USEREVENT + 1
-pygame.time.set_timer(obstacle_timer,1500)
+initial_obstacle_interval = 2000
+obstacle_interval = initial_obstacle_interval
+pygame.time.set_timer(obstacle_timer,obstacle_interval)
 
 # Game loop
 while True:
@@ -240,6 +241,17 @@ while True:
 
         score = display_score()
 
+        if score >= 20 and obstacle_interval > 1500:
+            obstacle_interval = 1500
+            pygame.time.set_timer(obstacle_timer, obstacle_interval)
+        elif score >= 40 and obstacle_interval > 1000:
+            obstacle_interval = 1000
+            pygame.time.set_timer(obstacle_timer, obstacle_interval)
+        elif score >= 60 and obstacle_interval > 800:
+            obstacle_interval = 800
+            pygame.time.set_timer(obstacle_timer, obstacle_interval)
+
+
         player.update()
         player.draw(screen)
 
@@ -249,6 +261,8 @@ while True:
         game_active = collisions()
 
     else:
+
+        pygame.time.set_timer(obstacle_timer, 2000)
 
         if score == 0:
             screen.fill("#88b07b")
@@ -263,6 +277,7 @@ while True:
                 screen.blit(score_message, score_message_rectangle)
 
         if player.sprite.is_hurt:
+
 
             screen.blit(sky1_surface, (sky1_x_pos, 0))
             screen.blit(sky1_surface, (sky1_x_pos + 800, 0))
@@ -280,7 +295,6 @@ while True:
             player.draw(screen)
 
             if death_animation_executed == False:
-                print("Death animation")
                 player.sprite.gravity = -20
                 death_animation_executed = True
 
