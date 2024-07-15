@@ -192,9 +192,7 @@ game_message_rectangle = game_message.get_rect(center = (400,340))
 
 # obstacle timer
 obstacle_timer = pygame.USEREVENT + 1
-initial_obstacle_interval = 2000
-obstacle_interval = initial_obstacle_interval
-pygame.time.set_timer(obstacle_timer,obstacle_interval)
+pygame.time.set_timer(obstacle_timer,2000)
 
 # Game loop
 while True:
@@ -241,16 +239,21 @@ while True:
 
         score = display_score()
 
-        if score >= 20 and obstacle_interval > 1500:
-            obstacle_interval = 1500
-            pygame.time.set_timer(obstacle_timer, obstacle_interval)
-        elif score >= 40 and obstacle_interval > 1000:
-            obstacle_interval = 1000
-            pygame.time.set_timer(obstacle_timer, obstacle_interval)
-        elif score >= 60 and obstacle_interval > 800:
-            obstacle_interval = 800
-            pygame.time.set_timer(obstacle_timer, obstacle_interval)
-
+        match score:
+            case 90:
+                pygame.time.set_timer(obstacle_timer, 800)
+            case 80:
+                pygame.time.set_timer(obstacle_timer, 850)
+            case 60:
+                pygame.time.set_timer(obstacle_timer, 900)
+            case 40:
+                pygame.time.set_timer(obstacle_timer, 950)
+            case 30:
+                pygame.time.set_timer(obstacle_timer, 1100)
+            case 20:
+                pygame.time.set_timer(obstacle_timer, 1250)
+            case 10:
+                pygame.time.set_timer(obstacle_timer, 1500)
 
         player.update()
         player.draw(screen)
