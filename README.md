@@ -27,7 +27,7 @@ Install dependencies
   pip3 install pygame 
 ```
 
-Start the server
+Run the game
 
 ```bash
   python3 main.py
